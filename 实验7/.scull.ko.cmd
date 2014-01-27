@@ -1,0 +1,1 @@
+cmd_/home/wangtianzhi/桌面/linux内核实验/实验七/scull.ko := ld -r -m elf_i386 -T /usr/src/linux-2.6.35.13/scripts/module-common.lds --build-id -o /home/wangtianzhi/桌面/linux内核实验/实验七/scull.ko /home/wangtianzhi/桌面/linux内核实验/实验七/scull.o /home/wangtianzhi/桌面/linux内核实验/实验七/scull.mod.o

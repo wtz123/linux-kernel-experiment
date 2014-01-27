@@ -1,0 +1,1 @@
+1.linux内核2.6.35-32-generic版本struct proc_dir_entry结构中没有owner

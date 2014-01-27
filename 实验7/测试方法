@@ -1,0 +1,2 @@
+sudo dd if=/dev/zero of=/dev/scull0 bs=1024 count=786432
+

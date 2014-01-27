@@ -1,0 +1,3 @@
+obj-m := main.o
+all:
+	make -C /l

@@ -1,0 +1,5 @@
+1./proc/stat cpu状态信息
+http://blog.sina.com.cn/s/blog_691c5f870100mmqx.html
+
+2./proc/diskstats 磁盘信息
+http://zhangyangang.blog.51cto.com/4577733/811628

@@ -1,0 +1,1 @@
+cmd_/home/wangtianzhi/桌面/linux内核实验/实验七/scull/scull.o := ld -m elf_i386   -r -o /home/wangtianzhi/桌面/linux内核实验/实验七/scull/scull.o /home/wangtianzhi/桌面/linux内核实验/实验七/scull/main.o /home/wangtianzhi/桌面/linux内核实验/实验七/scull/pipe.o 

@@ -1,0 +1,1 @@
+cmd_/home/wangtianzhi/桌面/linux内核实验/实验四/main.ko := ld -r -m elf_i386 -T /usr/src/linux-headers-2.6.35-32-generic/scripts/module-common.lds --build-id -o /home/wangtianzhi/桌面/linux内核实验/实验四/main.ko /home/wangtianzhi/桌面/linux内核实验/实验四/main.o /home/wangtianzhi/桌面/linux内核实验/实验四/main.mod.o

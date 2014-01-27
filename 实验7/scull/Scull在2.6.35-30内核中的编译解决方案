@@ -1,0 +1,49 @@
+　LDD3作为从事驱动开发工作人员的必要参考资料，认真研究书中的附带源码具有很高的参考价值，但由于代码基于2.6.10内核，部分内核API较老，导致在2.6.35-30等较新内核上编译不能通过，由于工作需要，特花了一段时间进行整理，本篇文章对示例源码中的第一个驱动程序SCULL进行整理，供各位同仁参考：
+
+　　1、修改Makefile的第24行：
+
+　　如果是基于PC，则KERNELDIR ？= /lib/modules/$（shell uname -r）/build（我的PC中linux内核是2.6.35版本）
+
+　　如果是基于arm，则改变为：
+
+　　KERNELDIR ？= ……/……/……/……/linux/linux-2.6.35-30（arm开发板上所需内核的源码目录）
+
+　　2、进入scull目录，执行make，有如下错误：
+
+　　make -C /lib/modules/2.6.35-30-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.32-28-generic' scripts/Makefile.build：49： *** CFLAGS was changed in "/media/orientation/driver/ldd3/examples/scull/Makefile". Fix it to use EXTRA_CFLAGS. Stop. make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic' make： *** [modules] Error 2 3、根据错误提示，修改Makefile中12、13行代码如下：
+
+　　EXTRA_CFLAGS += $（DEBFLAGS）
+
+　　EXTRA_CFLAGS += -I$（LDDINC）
+
+　　4、接着make，错误如下：
+
+　　make -C /lib/modules/2.6.35-30-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.32-28-generic' CC [M] /media/orientation/driver/ldd3/examples/scull/main.o /media/orientation/driver/ldd3/examples/scull/main.c：17：26： error： linux/config.h： No such file or directory make[2]： *** [/media/orientation/driver/ldd3/examples/scull/main.o] Error 1 make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic' make： *** [modules] Error 2 root@ubuntu：/media/orientation/driver/ldd3/examples/scull# vim Makefile root@ubuntu：/media/orientation/driver/ldd3/examples/scull# make make -C /lib/modules/2.6.32-28-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.32-28-generic' CC [M] /media/orientation/driver/ldd3/examples/scull/main.o /media/orientation/driver/ldd3/examples/scull/main.c：17：26： error： linux/config.h： No such file or directory make[2]： *** [/media/orientation/driver/ldd3/examples/scull/main.o] Error 1 make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic 5、根据提示，查看2.6.35.30源码发现linux/config.h文件不存在，直接在main.c里将他屏蔽，接着编译，仍有错误：
+
+　　make -C /lib/modules/2.6.35-30-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.32-28-generic' CC [M] /media/orientation/driver/ldd3/examples/scull/main.o CC [M] /media/orientation/driver/ldd3/examples/scull/pipe.o /media/orientation/driver/ldd3/examples/scull/pipe.c： In function ‘scull_p_read’：/media/orientation/driver/ldd3/examples/scull/pipe.c：131： error： ‘TASK_INTERRUPTIBLE’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/pipe.c：131： error： （Each undeclared identifier is reported only once /media/orientation/driver/ldd3/examples/scull/pipe.c：131： error： for each function it appears in.）
+
+　　/media/orientation/driver/ldd3/examples/scull/pipe.c：131： error： implicit declaration of function ‘signal_pending’/media/orientation/driver/ldd3/examples/scull/pipe.c：131： error： implicit declaration of function ‘schedule’/media/orientation/driver/ldd3/examples/scull/pipe.c： In function ‘scull_getwritespace’：/media/orientation/driver/ldd3/examples/scull/pipe.c：168： error： ‘TASK_INTERRUPTIBLE’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/pipe.c： In function ‘scull_p_write’：/media/orientation/driver/ldd3/examples/scull/pipe.c：219： error： ‘TASK_INTERRUPTIBLE’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/pipe.c：223： error： ‘SIGIO’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/pipe.c：223： error： ‘POLL_IN’ undeclared （first use in this function）
+
+　　make[2]： *** [/media/orientation/driver/ldd3/examples/scull/pipe.o] Error 1 make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic' make： *** [modules] Error 2 6、根据提示，TASK_INTERRUPTIBLE没有声明，我们在源码里面搜索，发现该宏定义在<linux/sched.h>中，故在pipe.c中加入该头文件，接着make：
+
+　　make -C /lib/modules/2.6.35-30-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.35-30-generic' CC [M] /media/orientation/driver/ldd3/examples/scull/pipe.o CC [M] /media/orientation/driver/ldd3/examples/scull/access.o /media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_u_open’：/media/orientation/driver/ldd3/examples/scull/access.c：106： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c：107： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c：114： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_w_available’：/media/orientation/driver/ldd3/examples/scull/access.c：165： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c：166： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_w_open’：/media/orientation/driver/ldd3/examples/scull/access.c：179： error： ‘TASK_INTERRUPTIBLE’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/access.c：179： error： （Each undeclared identifier is reported only once /media/orientation/driver/ldd3/examples/scull/access.c：179： error： for each function it appears in.）
+
+　　/media/orientation/driver/ldd3/examples/scull/access.c：179： error： implicit declaration offunction ‘signal_pending’/media/orientation/driver/ldd3/examples/scull/access.c：179： error： implicit declaration offunction ‘schedule’/media/orientation/driver/ldd3/examples/scull/access.c：184： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_w_release’：/media/orientation/driver/ldd3/examples/scull/access.c：205： error： ‘TASK_INTERRUPTIBLE’ undeclared （first use in this function）
+
+　　/media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_c_open’：/media/orientation/driver/ldd3/examples/scull/access.c：277： error： dereferencing pointer to incomplete type /media/orientation/driver/ldd3/examples/scull/access.c：281： error： dereferencing pointer to incomplete type make[2]： *** [/media/orientation/driver/ldd3/examples/scull/access.o] Error 1 make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic' make： *** [modules] Error 2 7、根据提示，同上所述，我们需要在access.c中加入头文件<sched.h>，接着编译：
+
+　　make -C /lib/modules/2.6.35-30-generic/build M=/media/orientation/driver/ldd3/examples/scull LDDINC=/media/orientation/driver/ldd3/examples/scull/……/include modules make[1]： Entering directory `/usr/src/linux-headers-2.6.32-28-generic' CC [M] /media/orientation/driver/ldd3/examples/scull/access.o /media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_u_open’：/media/orientation/driver/ldd3/examples/scull/access.c：106： error： ‘struct task_struct’ has no member named ‘uid’/media/orientation/driver/ldd3/examples/scull/access.c：107： error： ‘struct task_struct’ has no member named ‘euid’/media/orientation/driver/ldd3/examples/scull/access.c：114： error： ‘struct task_struct’ has no member named ‘uid’/media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_w_available’：/media/orientation/driver/ldd3/examples/scull/access.c：165： error： ‘struct task_struct’ has no member named ‘uid’/media/orientation/driver/ldd3/examples/scull/access.c：166： error： ‘struct task_struct’ has no member named ‘euid’/media/orientation/driver/ldd3/examples/scull/access.c： In function ‘scull_w_open’：/media/orientation/driver/ldd3/examples/scull/access.c：184： error： ‘struct task_struct’ has no member named ‘uid’make[2]： *** [/media/orientation/driver/ldd3/examples/scull/access.o] Error 1 make[1]： *** [_module_/media/orientation/driver/ldd3/examples/scull] Error 2 make[1]： Leaving directory `/usr/src/linux-headers-2.6.32-28-generic' make： *** [modules] Error 2 8、根据提示，错误在于task_struct结构体没有uid，euid成员变量，查看源码发现struct task_struct定义在include/linux/sched.h中，确实没有这两个成员，逐个成员分析发现，这两个成员在2.6.35内核中放在const struct cred *cred成员中了，所以，我们尝试将所有出现错误的地方做如下改动：
+
+　　current->uid 修改为 current->cred->uid current->euid 修改为 current->cred->euid 9、接着make，发现成功编译。
+　　
+http://www.chineselinuxuniversity.net/articles/48851.shtml
